@@ -32,7 +32,10 @@ export default function LoginPage() {
 
     setTimeout(() => {
       const users = JSON.parse(localStorage.getItem("bs_users") || "[]");
-      const user = users.find((u: any) => u.username === username && u.password === password);
+      const user = users.find((u: any) => 
+        u.username.trim().toLowerCase() === username.trim().toLowerCase() && 
+        u.password === password
+      );
 
       if (user) {
         document.cookie = `auth_role=${user.role}; path=/; max-age=86400`;

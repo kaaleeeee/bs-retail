@@ -28,11 +28,13 @@ export default function AdminPage() {
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
-    const name = (form.elements[0] as HTMLInputElement).value;
-    const username = (form.elements[1] as HTMLInputElement).value;
-    const password = (form.elements[2] as HTMLInputElement).value;
-    const role = (form.elements[3] as HTMLSelectElement).value;
-    const branch = (form.elements[4] as HTMLSelectElement).value;
+    const formData = new FormData(form);
+    
+    const name = formData.get("name") as string;
+    const username = formData.get("username") as string;
+    const password = formData.get("password") as string;
+    const role = formData.get("role") as string;
+    const branch = formData.get("branch") as string;
 
     const existingUsers = JSON.parse(localStorage.getItem("bs_users") || "[]");
     
@@ -41,7 +43,7 @@ export default function AdminPage() {
       existingUsers.push({ username: "admin", password: "123", role: "admin", name: "Super Admin", branch: "HO" });
     }
 
-    if (existingUsers.some((u: any) => u.username === username)) {
+    if (existingUsers.some((u: any) => u.username.toLowerCase() === username.toLowerCase())) {
       alert("Gagal: Username sudah terdaftar!");
       return;
     }
@@ -49,7 +51,7 @@ export default function AdminPage() {
     const newUser = { name, username, password, role, branch };
     localStorage.setItem("bs_users", JSON.stringify([...existingUsers, newUser]));
     
-    alert(`Berhasil! Akun ${username} telah dibuat dan sudah bisa digunakan untuk Login.`);
+    alert(`Berhasil! Akun ${username} telah dibuat dengan password: ${password}\nSilakan gunakan untuk Login.`);
     form.reset();
   };
 
@@ -123,7 +125,7 @@ export default function AdminPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold text-slate-500 mb-1 block">Kategori</label>
-                <select className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#E11D74] outline-none text-slate-900">
+                <select name="role" className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#E11D74] outline-none text-slate-900">
                   <option>Non-Food</option>
                   <option>Food</option>
                   <option>Fresh</option>
@@ -131,7 +133,7 @@ export default function AdminPage() {
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-500 mb-1 block">Satuan</label>
-                <select className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#E11D74] outline-none text-slate-900">
+                <select name="branch" className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#E11D74] outline-none text-slate-900">
                   <option>Pcs</option>
                   <option>Box</option>
                   <option>Kg</option>
@@ -162,24 +164,24 @@ export default function AdminPage() {
           <form onSubmit={handleAddUser} className="flex flex-col gap-4">
             <div>
               <label className="text-xs font-bold text-slate-500 mb-1 block">Nama Lengkap *</label>
-              <input required type="text" placeholder="Contoh: Rina Melati" className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#E11D74] outline-none text-slate-900" />
+              <input name="name" required type="text" placeholder="Contoh: Rina Melati" className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#E11D74] outline-none text-slate-900" />
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold text-slate-500 mb-1 block">Username Login *</label>
-                <input required type="text" placeholder="Contoh: rina_staff" className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#E11D74] outline-none text-slate-900" />
+                <input name="username" required type="text" placeholder="Contoh: rina_staff" className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#E11D74] outline-none text-slate-900" />
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-500 mb-1 block">Password Default *</label>
-                <input required type="text" defaultValue="12345" className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#E11D74] outline-none text-slate-900" />
+                <input name="password" required type="text" defaultValue="12345" className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#E11D74] outline-none text-slate-900" />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold text-slate-500 mb-1 block">Role Akses *</label>
-                <select className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#E11D74] outline-none text-slate-900">
+                <select name="role" className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#E11D74] outline-none text-slate-900">
                   <option value="staff">Staff Toko</option>
                   <option value="spv">Supervisor</option>
                   <option value="marcom">Marcom / HO</option>
@@ -187,7 +189,7 @@ export default function AdminPage() {
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-500 mb-1 block">Cabang / Toko *</label>
-                <select className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#E11D74] outline-none text-slate-900">
+                <select name="branch" className="w-full bg-slate-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#E11D74] outline-none text-slate-900">
                   <option>JKT-01 (Jakarta Selatan)</option>
                   <option>BDG-01 (Bandung Pusat)</option>
                   <option>SBY-02 (Surabaya Timur)</option>
