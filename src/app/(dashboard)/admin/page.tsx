@@ -38,6 +38,18 @@ export default function AdminPage() {
           <h1 className="font-bold text-slate-800 text-lg">Admin Panel</h1>
           <p className="text-xs text-slate-500">Kelola Master Barang & Pengguna Toko</p>
         </div>
+        <button 
+          onClick={() => {
+            if (confirm("Yakin ingin menghapus SEMUA data dummy di perangkat ini?")) {
+              localStorage.removeItem("bs_reports");
+              alert("Data berhasil dihapus. Silakan refresh halaman.");
+              window.location.reload();
+            }
+          }}
+          className="bg-rose-100 text-rose-600 px-3 py-2 rounded-xl text-xs font-bold hover:bg-rose-200 transition"
+        >
+          Hapus Semua Data
+        </button>
       </div>
 
       {/* Tabs */}

@@ -1,71 +1,86 @@
 "use client";
 
-import { X, Flashlight, Image as ImageIcon } from "lucide-react";
-import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ChevronLeft, Camera } from "lucide-react";
+import { Html5Qrcode } from "html5-qrcode";
 
 export default function ScanPage() {
-  const [scanning, setScanning] = useState(true);
+  const router = useRouter();
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [error, setError] = useState<string>("");
 
-  // Mocking scan process
   useEffect(() => {
-    if (scanning) {
-      const timer = setTimeout(() => {
-        setScanning(false);
-      }, 3000); // Mock finding a barcode after 3 seconds
-      return () => clearTimeout(timer);
-    }
-  }, [scanning]);
+    let html5QrCode: Html5Qrcode;
+
+    const startScanner = async () => {
+      try {
+        html5QrCode = new Html5Qrcode("reader");
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 150 },
+          },
+          (decodedText) => {
+            // Success! Stop scanner and redirect
+            html5QrCode.stop().then(() => {
+              router.push(`/input?sku=${decodedText}`);
+            });
+          },
+          (errorMessage) => {
+            // parse errors are normal (no barcode found yet)
+          }
+        );
+        setHasPermission(true);
+      } catch (err) {
+        console.error(err);
+        setHasPermission(false);
+        setError("Kamera tidak diizinkan atau tidak ditemukan.");
+      }
+    };
+
+    startScanner();
+
+    return () => {
+      if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().catch(console.error);
+      }
+    };
+  }, [router]);
 
   return (
-    <div className="fixed inset-0 bg-black z-[100] flex flex-col max-w-md mx-auto w-full">
-      {/* Header */}
-      <div className="flex justify-between items-center p-6 text-white bg-gradient-to-b from-black/70 to-transparent">
-        <Link href="/" className="p-2 bg-white/20 rounded-full backdrop-blur-md active:scale-95 transition">
-          <X size={24} />
-        </Link>
-        <h1 className="font-bold">Scan Barcode</h1>
-        <button className="p-2 bg-white/20 rounded-full backdrop-blur-md active:scale-95 transition">
-          <Flashlight size={24} />
+    <div className="flex flex-col min-h-screen md:min-h-full bg-black md:bg-gray-50 pb-20 md:pb-6 relative">
+      <div className="bg-transparent md:bg-white px-4 md:px-6 py-4 flex items-center gap-4 z-20 sticky top-0 md:border-b md:rounded-t-3xl md:-mt-6 mb-4 md:-mx-6">
+        <button onClick={() => router.back()} className="p-2 -ml-2 rounded-full hover:bg-white/20 active:bg-white/10 transition text-white md:text-slate-700 bg-black/30 md:bg-transparent backdrop-blur-md">
+          <ChevronLeft size={24} />
         </button>
+        <h1 className="font-bold text-lg text-white md:text-slate-800 drop-shadow-md md:drop-shadow-none">Scan Barcode SKU</h1>
       </div>
 
-      {/* Scanner Area */}
-      <div className="flex-1 relative flex items-center justify-center">
-        {/* Mock Camera View */}
-        <div className="absolute inset-0 bg-slate-800 object-cover" />
-        
-        {/* Scanner Overlay Frame */}
-        <div className="relative z-10 w-64 h-64 border-2 border-white/50 rounded-2xl overflow-hidden flex items-center justify-center">
-          <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-[#E11D74] rounded-tl-xl"></div>
-          <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-[#E11D74] rounded-tr-xl"></div>
-          <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-[#E11D74] rounded-bl-xl"></div>
-          <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-[#E11D74] rounded-br-xl"></div>
-          
-          {scanning ? (
-            <div className="w-full h-0.5 bg-[#E11D74] absolute top-1/2 -translate-y-1/2 animate-[pulse_1s_ease-in-out_infinite] shadow-[0_0_10px_2px_#E11D74]" />
-          ) : (
-            <div className="text-white text-center bg-black/60 p-4 rounded-xl backdrop-blur-sm">
-              <p className="font-bold mb-2">Barcode Ditemukan!</p>
-              <p className="text-sm">SKU: 899999912345</p>
-              <Link href="/input?sku=899999912345" className="mt-4 block bg-[#E11D74] text-white px-4 py-2 rounded-full text-sm font-bold">Lanjut Input</Link>
-            </div>
-          )}
-        </div>
-        
-        <p className="absolute bottom-10 text-white/70 text-sm">
-          Arahkan barcode produk ke dalam bingkai
-        </p>
-      </div>
-
-      {/* Footer Actions */}
-      <div className="bg-black/80 p-6 flex justify-center pb-safe">
-        <Link href="/input" className="flex flex-col items-center gap-2 text-white/80 active:scale-95 transition">
-          <div className="p-4 bg-white/10 rounded-full">
-            <ImageIcon size={24} />
+      <div className="flex-1 flex flex-col items-center justify-center -mt-20 md:mt-0 relative w-full h-full">
+        {hasPermission === false ? (
+          <div className="text-center p-8 text-white md:text-slate-800 z-10">
+            <Camera size={48} className="mx-auto mb-4 opacity-50" />
+            <h2 className="font-bold mb-2">Akses Kamera Ditolak</h2>
+            <p className="text-sm opacity-80">{error}</p>
+            <p className="text-xs opacity-60 mt-4">Silakan izinkan akses kamera di pengaturan browser Anda, lalu refresh halaman.</p>
           </div>
-          <span className="text-xs">Input Manual</span>
-        </Link>
+        ) : (
+          <div className="w-full h-full md:w-full md:max-w-md md:aspect-[3/4] md:rounded-3xl overflow-hidden bg-black relative flex items-center justify-center">
+            {/* The div where html5-qrcode injects the video stream */}
+            <div id="reader" className="w-full h-full flex items-center justify-center [&>video]:object-cover [&>video]:h-full [&>video]:w-full"></div>
+            
+            {/* Target overlay overlay */}
+            <div className="absolute inset-0 pointer-events-none border-[50px] border-black/40 z-10">
+               <div className="w-full h-full border-2 border-[#E11D74] shadow-[0_0_0_999px_rgba(0,0,0,0.5)]"></div>
+            </div>
+            
+            <p className="absolute bottom-24 md:bottom-10 left-0 right-0 text-center text-white text-sm font-semibold drop-shadow-md z-20 px-8">
+              Arahkan garis merah tepat ke barcode produk
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
