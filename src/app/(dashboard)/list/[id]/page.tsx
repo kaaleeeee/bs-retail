@@ -49,18 +49,14 @@ export default function DetailPage() {
         
         {/* Product Summary */}
         <section className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-          <div className="flex items-start gap-4 mb-4">
-            <div className="w-16 h-16 bg-slate-100 rounded-xl flex items-center justify-center shrink-0">
-              {report.photos && report.photos.length > 0 ? (
-                <img src={report.photos[0]} alt="Produk" className="w-full h-full object-cover rounded-xl" />
-              ) : (
-                <Package size={32} className="text-[#E11D74]" />
-              )}
+          <div className="flex items-start gap-4 mb-4 border-b border-gray-100 pb-4">
+            <div className="w-16 h-16 bg-pink-50 rounded-xl flex items-center justify-center shrink-0 border border-pink-100">
+              <Package size={32} className="text-[#E11D74]" />
             </div>
             <div className="flex-1">
               <h2 className="font-bold text-lg text-slate-800">{report.name}</h2>
               <p className="text-sm text-slate-500 mb-2">SKU: {report.sku}</p>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-bold">{report.qty} Pcs</span>
                 {report.status === "Menunggu" && <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold">Menunggu SPV</span>}
                 {report.status === "Diproses" && <span className="bg-cyan-100 text-cyan-700 px-3 py-1 rounded-full text-xs font-bold">Diproses Marcom</span>}
@@ -70,18 +66,28 @@ export default function DetailPage() {
             </div>
           </div>
           
+          {/* Notes Section */}
           {(report.damageType || report.notes) && (
-            <div className="bg-rose-50/50 p-4 rounded-xl border border-rose-100 mt-4">
+            <div className="bg-rose-50/70 p-4 rounded-xl border border-rose-100 mb-4">
               {report.damageType && <p className="text-sm font-bold text-rose-700 mb-1">Jenis: {report.damageType}</p>}
               {report.notes && <p className="text-sm text-rose-600">{report.notes}</p>}
             </div>
           )}
           
-          {report.photos && report.photos.length > 1 && (
-            <div className="mt-4 flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-              {report.photos.slice(1).map((src, i) => (
-                <img key={i} src={src} alt="Bukti" className="w-20 h-20 object-cover rounded-lg border border-gray-200 shrink-0" />
-              ))}
+          {/* Photos Gallery */}
+          {report.photos && report.photos.length > 0 && (
+            <div>
+              <p className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Foto Bukti Kerusakan</p>
+              <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+                {report.photos.map((src, i) => (
+                  <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="block shrink-0 relative group">
+                    <img src={src} alt="Bukti" className="h-32 w-32 md:h-48 md:w-48 object-cover rounded-xl border border-gray-200 shadow-sm transition group-hover:opacity-90" />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/20 rounded-xl transition">
+                      <span className="text-white text-xs font-bold bg-black/50 px-2 py-1 rounded-md">Buka</span>
+                    </div>
+                  </a>
+                ))}
+              </div>
             </div>
           )}
         </section>
