@@ -13,6 +13,7 @@ export default function DetailPage() {
   const { reports, updateReportStatus } = useBSReports();
   const user = useAuthUser();
   const [report, setReport] = useState<BSReport | null>(null);
+  const [showPhotos, setShowPhotos] = useState(false);
 
   useEffect(() => {
     const found = reports.find((r) => r.id === id);
@@ -74,27 +75,41 @@ export default function DetailPage() {
             </div>
           )}
           
-          {/* Photos Gallery */}
+          {/* Photos Button */}
           {report.photos && report.photos.length > 0 && (
             <div className="mt-2">
-              <p className="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wide">Foto Bukti Kerusakan</p>
-              <div className="flex flex-col gap-4">
-                {report.photos.map((src, i) => (
-                  <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="block relative group w-full">
-                    <img 
-                      src={src} 
-                      alt={`Bukti ${i+1}`} 
-                      className="w-full h-auto min-h-[250px] max-h-[400px] object-contain bg-slate-100 rounded-xl border border-gray-200 shadow-sm" 
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/10 rounded-xl transition">
-                      <span className="text-white text-sm font-bold bg-black/60 px-4 py-2 rounded-lg backdrop-blur-sm">Lihat Layar Penuh</span>
-                    </div>
-                  </a>
-                ))}
-              </div>
+              <button 
+                onClick={() => setShowPhotos(true)}
+                className="w-full bg-slate-50 border border-gray-200 text-slate-700 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-slate-100 transition"
+              >
+                <Package size={18} className="text-[#E11D74]" />
+                Lihat Bukti Visual ({report.photos.length} Foto)
+              </button>
             </div>
           )}
         </section>
+
+        {/* Fullscreen Photo Modal */}
+        {showPhotos && report.photos && (
+          <div className="fixed inset-0 z-[999] bg-black/95 flex flex-col items-center justify-center p-4">
+            <button 
+              onClick={() => setShowPhotos(false)}
+              className="absolute top-4 right-4 bg-white/10 p-3 rounded-full text-white hover:bg-rose-500 transition"
+            >
+              <X size={24} />
+            </button>
+            <div className="w-full max-w-2xl h-full flex flex-col gap-4 overflow-y-auto pt-16 pb-6 no-scrollbar">
+              {report.photos.map((src, i) => (
+                <img 
+                  key={i}
+                  src={src} 
+                  alt={`Bukti ${i+1}`} 
+                  className="w-full h-auto object-contain rounded-lg" 
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Timeline Stepper */}
         <section className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
