@@ -20,14 +20,7 @@ export function useBSReports() {
   useEffect(() => {
     const stored = localStorage.getItem("bs_reports");
     if (stored) {
-      const parsed = JSON.parse(stored);
-      // Auto-migrate: wipe old dummy data that doesn't have the new fields
-      if (parsed.length > 0 && parsed[0].id.startsWith("BS-00")) {
-        localStorage.removeItem("bs_reports");
-        setReports([]);
-      } else {
-        setReports(parsed);
-      }
+      setReports(JSON.parse(stored));
     }
   }, []);
 

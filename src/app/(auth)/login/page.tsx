@@ -1,113 +1,109 @@
 "use client";
 
-import { Package, KeyRound, User } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Package, Lock, User as UserIcon } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [role, setRole] = useState("staff");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Initialize default users if not exist
+  useEffect(() => {
+    const existing = localStorage.getItem("bs_users");
+    if (!existing) {
+      const defaultUsers = [
+        { username: "admin", password: "123", role: "admin", name: "Administrator", branch: "HO" },
+        { username: "staff", password: "123", role: "staff", name: "Staff Toko", branch: "JKT-01" },
+        { username: "spv", password: "123", role: "spv", name: "Supervisor", branch: "JKT-01" },
+        { username: "marcom", password: "123", role: "marcom", name: "Marcom", branch: "HO" }
+      ];
+      localStorage.setItem("bs_users", JSON.stringify(defaultUsers));
+    }
+  }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !password) {
-      alert("Harap isi Username dan Password!");
-      return;
-    }
+    setIsSubmitting(true);
+    setError("");
 
-    // Set cookie valid for 1 day
-    document.cookie = `auth_role=${role}; path=/; max-age=86400`;
-    document.cookie = `auth_name=${username}; path=/; max-age=86400`;
-    
-    // Redirect to home
-    router.push("/");
-    router.refresh();
+    setTimeout(() => {
+      const users = JSON.parse(localStorage.getItem("bs_users") || "[]");
+      const user = users.find((u: any) => u.username === username && u.password === password);
+
+      if (user) {
+        document.cookie = `auth_role=${user.role}; path=/; max-age=86400`;
+        document.cookie = `auth_name=${user.name}; path=/; max-age=86400`;
+        router.push("/");
+      } else {
+        setError("Username atau password salah!");
+        setIsSubmitting(false);
+      }
+    }, 600);
   };
 
   return (
-    <div className="min-h-screen bg-[#FFF0F5] flex flex-col justify-center items-center p-4">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden">
-        <div className="bg-[#E11D74] p-8 text-white flex flex-col items-center text-center">
-          <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-sm border-2 border-white/30">
-            <Package size={36} />
+    <div className="flex flex-col min-h-screen bg-[#FFF0F5] items-center justify-center p-4">
+      <div className="w-full max-w-sm bg-white p-8 rounded-3xl shadow-xl shadow-pink-100 border border-pink-50 relative overflow-hidden">
+        
+        {/* Decor */}
+        <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-pink-300 to-[#E11D74] rounded-full opacity-20 blur-2xl pointer-events-none"></div>
+        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-tr from-pink-300 to-[#E11D74] rounded-full opacity-20 blur-2xl pointer-events-none"></div>
+
+        <div className="flex flex-col items-center mb-8 relative z-10">
+          <div className="w-16 h-16 bg-gradient-to-tr from-[#E11D74] to-pink-400 rounded-2xl flex items-center justify-center text-white shadow-lg mb-4 shadow-pink-200">
+            <Package size={32} />
           </div>
-          <h1 className="text-2xl font-bold mb-1">BS Retail</h1>
-          <p className="text-sm opacity-90">Sistem Manajemen Bad Stock</p>
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">BS Retail</h1>
+          <p className="text-sm text-slate-500 font-medium mt-1 text-center">Sistem Manajemen Bad Stock</p>
         </div>
 
-        <form onSubmit={handleLogin} className="p-8 flex flex-col gap-5">
-          <div>
-            <label className="text-xs font-bold text-slate-500 mb-1 block uppercase tracking-wider">Pilih Role Akses</label>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { id: "staff", label: "Staff Toko" },
-                { id: "spv", label: "Supervisor" },
-                { id: "marcom", label: "Marcom / HO" },
-                { id: "admin", label: "Admin System" }
-              ].map((r) => (
-                <label 
-                  key={r.id} 
-                  className={`border rounded-xl p-3 text-sm text-center font-bold cursor-pointer transition ${
-                    role === r.id 
-                      ? "border-[#E11D74] bg-[#FFF0F5] text-[#E11D74]" 
-                      : "border-gray-200 text-slate-600 hover:bg-slate-50"
-                  }`}
-                >
-                  <input 
-                    type="radio" 
-                    name="role" 
-                    value={r.id} 
-                    checked={role === r.id} 
-                    onChange={(e) => setRole(e.target.value)}
-                    className="hidden" 
-                  />
-                  {r.label}
-                </label>
-              ))}
+        <form onSubmit={handleLogin} className="flex flex-col gap-4 relative z-10">
+          {error && (
+            <div className="bg-rose-50 text-rose-600 text-xs font-bold p-3 rounded-xl border border-rose-100 text-center">
+              {error}
             </div>
+          )}
+
+          <div className="relative">
+            <UserIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input 
+              type="text" 
+              placeholder="Username" 
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full bg-slate-50 border border-gray-200 rounded-xl py-3 pl-11 pr-4 text-sm font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-[#E11D74] transition"
+              required
+            />
           </div>
 
-          <div>
-            <label className="text-xs font-bold text-slate-500 mb-1 block uppercase tracking-wider">Username / Email</label>
-            <div className="relative">
-              <User className="absolute left-3 top-3.5 text-slate-400" size={18} />
-              <input 
-                type="text" 
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Masukkan username..." 
-                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-gray-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-[#E11D74] outline-none transition" 
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-xs font-bold text-slate-500 mb-1 block uppercase tracking-wider">Password</label>
-            <div className="relative">
-              <KeyRound className="absolute left-3 top-3.5 text-slate-400" size={18} />
-              <input 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••" 
-                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-gray-200 rounded-xl text-sm text-slate-900 focus:ring-2 focus:ring-[#E11D74] outline-none transition" 
-              />
-            </div>
+          <div className="relative">
+            <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input 
+              type="password" 
+              placeholder="Password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-slate-50 border border-gray-200 rounded-xl py-3 pl-11 pr-4 text-sm font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-[#E11D74] transition"
+              required
+            />
           </div>
 
           <button 
-            type="submit" 
-            className="w-full bg-[#E11D74] text-white py-4 rounded-xl font-bold shadow-lg shadow-pink-200 active:scale-[0.98] transition mt-4"
+            type="submit"
+            disabled={isSubmitting}
+            className="mt-4 bg-gradient-to-r from-[#E11D74] to-pink-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-pink-200 hover:shadow-xl hover:shadow-pink-200 transition-all active:scale-[0.98] disabled:opacity-70"
           >
-            Masuk (Login)
+            {isSubmitting ? "Memeriksa..." : "Masuk ke Sistem"}
           </button>
-          
-          <p className="text-xs text-center text-slate-400 mt-2">
-            *Gunakan sembarang teks untuk simulasi login.
-          </p>
         </form>
+
+        <p className="text-center text-xs text-slate-400 mt-8 relative z-10">
+          Untuk menambah akun baru, hubungi<br />Admin System Pusat (HO).
+        </p>
       </div>
     </div>
   );

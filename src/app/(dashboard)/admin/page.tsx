@@ -27,8 +27,30 @@ export default function AdminPage() {
 
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Berhasil! (Simulasi) Akun pengguna baru telah dibuat.");
-    (e.target as HTMLFormElement).reset();
+    const form = e.target as HTMLFormElement;
+    const name = (form.elements[0] as HTMLInputElement).value;
+    const username = (form.elements[1] as HTMLInputElement).value;
+    const password = (form.elements[2] as HTMLInputElement).value;
+    const role = (form.elements[3] as HTMLSelectElement).value;
+    const branch = (form.elements[4] as HTMLSelectElement).value;
+
+    const existingUsers = JSON.parse(localStorage.getItem("bs_users") || "[]");
+    
+    // Create default admin if array is empty
+    if (existingUsers.length === 0) {
+      existingUsers.push({ username: "admin", password: "123", role: "admin", name: "Super Admin", branch: "HO" });
+    }
+
+    if (existingUsers.some((u: any) => u.username === username)) {
+      alert("Gagal: Username sudah terdaftar!");
+      return;
+    }
+
+    const newUser = { name, username, password, role, branch };
+    localStorage.setItem("bs_users", JSON.stringify([...existingUsers, newUser]));
+    
+    alert(`Berhasil! Akun ${username} telah dibuat dan sudah bisa digunakan untuk Login.`);
+    form.reset();
   };
 
   return (
