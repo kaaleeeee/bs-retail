@@ -109,14 +109,17 @@ function InputForm() {
         formData.append("photos", blob, `photo_${i}.jpg`);
       }
 
-      await uploadPhotosAndAddReport(formData);
+      const res = await uploadPhotosAndAddReport(formData);
+      if (!res.success) {
+        throw new Error(res.error);
+      }
       
       setIsSubmitting(false);
       alert("Laporan berhasil dikirim!");
       router.push("/list");
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert("Terjadi kesalahan saat mengirim laporan.");
+      alert("Terjadi kesalahan: " + (e.message || "Gagal mengirim laporan."));
       setIsSubmitting(false);
     }
   };

@@ -53,38 +53,41 @@ export async function updateReportStatus(id: string, status: string) {
 // -- UPLOAD --
 
 export async function uploadPhotosAndAddReport(formData: FormData) {
-  const sku = formData.get("sku") as string;
-  const name = formData.get("name") as string;
-  const qty = Number(formData.get("qty"));
-  const damageType = (formData.get("damageType") as string) || null;
-  const notes = (formData.get("notes") as string) || null;
-  const files = formData.getAll("photos") as File[]; // Receive actual File objects
+  try {
+    const sku = formData.get("sku") as string;
+    const name = formData.get("name") as string;
+    const qty = Number(formData.get("qty"));
+    const damageType = (formData.get("damageType") as string) || null;
+    const notes = (formData.get("notes") as string) || null;
+    const files = formData.getAll("photos") as File[];
 
-  const photoUrls: string[] = [];
+    const photoUrls: string[] = [];
 
-  // 1. Upload all photos to Vercel Blob
-  for (const file of files) {
-    if (file.size > 0) {
-      const blob = await put(`reports/${Date.now()}-${file.name}`, file, {
-        access: "public",
-      });
-      photoUrls.push(blob.url);
+    for (const file of files) {
+      if (file.size > 0) {
+        const blob = await put(`reports/${Date.now()}-${file.name}`, file, {
+          access: "public",
+        });
+        photoUrls.push(blob.url);
+      }
     }
+
+    const id = `BS-${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`;
+    const status = "Menunggu";
+    const time = "Baru saja";
+    const timestamp = Date.now();
+
+    await pool.query(
+      `INSERT INTO reports (id, sku, name, qty, status, damage_type, notes, photos, time, timestamp)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [id, sku, name, qty, status, damageType, notes, JSON.stringify(photoUrls), time, timestamp]
+    );
+
+    revalidatePath("/list");
+    revalidatePath("/");
+    return { success: true, id };
+  } catch (err: any) {
+    console.error("Action error:", err);
+    return { success: false, error: err.message || "Gagal mengunggah foto atau menyimpan data." };
   }
-
-  // 2. Insert into Postgres
-  const id = `BS-${Math.floor(Math.random() * 1000).toString().padStart(3, "0")}`;
-  const status = "Menunggu";
-  const time = "Baru saja";
-  const timestamp = Date.now();
-
-  await pool.query(
-    `INSERT INTO reports (id, sku, name, qty, status, damage_type, notes, photos, time, timestamp)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-    [id, sku, name, qty, status, damageType, notes, JSON.stringify(photoUrls), time, timestamp]
-  );
-
-  revalidatePath("/list");
-  revalidatePath("/");
-  return { success: true, id };
 }
