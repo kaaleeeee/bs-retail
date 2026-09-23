@@ -12,40 +12,35 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize default users if not exist
-  useEffect(() => {
-    const existing = localStorage.getItem("bs_users");
-    if (!existing) {
-      const defaultUsers = [
-        { username: "admin", password: "123", role: "admin", name: "Administrator", branch: "HO" },
-        { username: "staff", password: "123", role: "staff", name: "Staff Toko", branch: "JKT-01" },
-        { username: "spv", password: "123", role: "spv", name: "Supervisor", branch: "JKT-01" },
-        { username: "marcom", password: "123", role: "marcom", name: "Marcom", branch: "HO" }
-      ];
-      localStorage.setItem("bs_users", JSON.stringify(defaultUsers));
-    }
-  }, []);
+  
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError("");
 
-    setTimeout(() => {
-      const users = JSON.parse(localStorage.getItem("bs_users") || "[]");
-      const user = users.find((u: any) => 
-        u.username.trim().toLowerCase() === username.trim().toLowerCase() && 
-        u.password === password
-      );
+        
+    import("@/actions").then(async ({ getUsers }) => {
+      try {
+        const users = await getUsers();
+        const user = users.find((u: any) => 
+          u.username.trim().toLowerCase() === username.trim().toLowerCase() && 
+          u.password === password
+        );
 
-      if (user) {
-        document.cookie = `auth_role=${user.role}; path=/; max-age=86400`;
-        document.cookie = `auth_name=${user.name}; path=/; max-age=86400`;
-        router.push("/");
-      } else {
-        setError("Username atau password salah!");
+        if (user) {
+          document.cookie = `auth_role=${user.role}; path=/; max-age=86400`;
+          document.cookie = `auth_name=${user.name}; path=/; max-age=86400`;
+          router.push("/");
+        } else {
+          setError("Username atau password salah!");
+          setIsSubmitting(false);
+        }
+      } catch (e) {
+        setError("Gagal menghubungi server database.");
         setIsSubmitting(false);
       }
-    }, 600);
+    });
   };
 
   return (

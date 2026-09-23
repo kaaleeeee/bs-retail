@@ -80,20 +80,45 @@ function InputForm() {
     setSelectedResult(product);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!sku || !name || qty < 1) {
       alert("Harap isi SKU, Nama Produk, dan Jumlah (Qty) dengan benar.");
       return;
     }
     
     setIsSubmitting(true);
-    // Simulate API delay
-    setTimeout(() => {
-      addReport({ sku, name, qty: Number(qty), damageType, notes, photos });
+    
+    try {
+      const { uploadPhotosAndAddReport } = await import("@/actions");
+      const formData = new FormData();
+      formData.append("sku", sku);
+      formData.append("name", name);
+      formData.append("qty", qty.toString());
+      if (damageType) formData.append("damageType", damageType);
+      if (notes) formData.append("notes", notes);
+      
+      // We need to pass the actual File objects, not base64 strings!
+      // But we only have base64 strings in state.
+      // We can convert base64 back to Blob/File, or we change handleFileChange to save Files.
+      // Let's convert base64 to Blob
+      
+      for (let i = 0; i < photos.length; i++) {
+        const src = photos[i];
+        const res = await fetch(src);
+        const blob = await res.blob();
+        formData.append("photos", blob, `photo_${i}.jpg`);
+      }
+
+      await uploadPhotosAndAddReport(formData);
+      
       setIsSubmitting(false);
       alert("Laporan berhasil dikirim!");
       router.push("/list");
-    }, 800);
+    } catch (e) {
+      console.error(e);
+      alert("Terjadi kesalahan saat mengirim laporan.");
+      setIsSubmitting(false);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

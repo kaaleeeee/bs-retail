@@ -9,6 +9,17 @@ export default function AdminPage() {
   const user = useAuthUser();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("produk");
+  const [usersList, setUsersList] = useState<any[]>([]);
+
+  const loadUsers = async () => {
+    const { getUsers } = await import("@/actions");
+    const data = await getUsers();
+    setUsersList(data);
+  };
+
+  require("react").useEffect(() => {
+    loadUsers();
+  }, []);
 
   // Prevent non-admins from viewing
   if (user && user.role !== "admin") {
@@ -25,34 +36,24 @@ export default function AdminPage() {
     (e.target as HTMLFormElement).reset();
   };
 
-  const handleAddUser = (e: React.FormEvent) => {
+  const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
     
-    const name = formData.get("name") as string;
-    const username = formData.get("username") as string;
     const password = formData.get("password") as string;
-    const role = formData.get("role") as string;
-    const branch = formData.get("branch") as string;
-
-    const existingUsers = JSON.parse(localStorage.getItem("bs_users") || "[]");
+    const username = formData.get("username") as string;
     
-    // Create default admin if array is empty
-    if (existingUsers.length === 0) {
-      existingUsers.push({ username: "admin", password: "123", role: "admin", name: "Super Admin", branch: "HO" });
-    }
-
-    if (existingUsers.some((u: any) => u.username.toLowerCase() === username.toLowerCase())) {
-      alert("Gagal: Username sudah terdaftar!");
-      return;
-    }
-
-    const newUser = { name, username, password, role, branch };
-    localStorage.setItem("bs_users", JSON.stringify([...existingUsers, newUser]));
+    const { addUser } = await import("@/actions");
+    const res = await addUser(formData);
     
-    alert(`Berhasil! Akun ${username} telah dibuat dengan password: ${password}\nSilakan gunakan untuk Login.`);
-    form.reset();
+    if (res.success) {
+      alert(`Berhasil! Akun ${username} telah dibuat dengan password: ${password}\nSilakan gunakan untuk Login.`);
+      form.reset();
+      loadUsers();
+    } else {
+      alert(res.error || "Gagal membuat akun.");
+    }
   };
 
   return (
@@ -145,6 +146,34 @@ export default function AdminPage() {
               Simpan Produk
             </button>
           </form>
+
+          {usersList.length > 0 && (
+            <div className="mt-8">
+              <h3 className="font-bold text-slate-700 text-sm mb-3">Daftar Akun Terdaftar</h3>
+              <div className="bg-slate-50 rounded-xl overflow-hidden border border-gray-200">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-100 text-slate-500 uppercase">
+                    <tr>
+                      <th className="px-4 py-3">Nama</th>
+                      <th className="px-4 py-3">Username</th>
+                      <th className="px-4 py-3">Role</th>
+                      <th className="px-4 py-3">Cabang</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {usersList.map((u, i) => (
+                      <tr key={i} className="border-t border-gray-200 hover:bg-white">
+                        <td className="px-4 py-3 font-semibold text-slate-800">{u.name}</td>
+                        <td className="px-4 py-3 text-slate-600">{u.username}</td>
+                        <td className="px-4 py-3 text-slate-600 uppercase">{u.role}</td>
+                        <td className="px-4 py-3 text-slate-600 uppercase">{u.branch}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </section>
       )}
 
