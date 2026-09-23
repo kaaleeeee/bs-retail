@@ -76,14 +76,18 @@ export default function DetailPage() {
           
           {/* Photos Gallery */}
           {report.photos && report.photos.length > 0 && (
-            <div>
-              <p className="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Foto Bukti Kerusakan</p>
-              <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+            <div className="mt-2">
+              <p className="text-xs font-bold text-slate-500 mb-3 uppercase tracking-wide">Foto Bukti Kerusakan</p>
+              <div className="flex flex-col gap-4">
                 {report.photos.map((src, i) => (
-                  <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="block shrink-0 relative group">
-                    <img src={src} alt="Bukti" className="h-32 w-32 md:h-48 md:w-48 object-cover rounded-xl border border-gray-200 shadow-sm transition group-hover:opacity-90" />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/20 rounded-xl transition">
-                      <span className="text-white text-xs font-bold bg-black/50 px-2 py-1 rounded-md">Buka</span>
+                  <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="block relative group w-full">
+                    <img 
+                      src={src} 
+                      alt={`Bukti ${i+1}`} 
+                      className="w-full h-auto min-h-[250px] max-h-[400px] object-contain bg-slate-100 rounded-xl border border-gray-200 shadow-sm" 
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/10 rounded-xl transition">
+                      <span className="text-white text-sm font-bold bg-black/60 px-4 py-2 rounded-lg backdrop-blur-sm">Lihat Layar Penuh</span>
                     </div>
                   </a>
                 ))}
