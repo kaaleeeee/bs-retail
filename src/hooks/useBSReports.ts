@@ -9,6 +9,9 @@ export type BSReport = {
   status: "Menunggu" | "Diproses" | "Selesai" | "Ditolak";
   time: string;
   timestamp: number;
+  photos?: string[];
+  notes?: string;
+  damageType?: string;
 };
 
 export function useBSReports() {

@@ -48,21 +48,42 @@ export default function DetailPage() {
       <div className="flex flex-col gap-5 md:max-w-2xl md:mx-auto w-full px-4 md:px-0">
         
         {/* Product Summary */}
-        <section className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-start gap-4">
-          <div className="w-16 h-16 bg-slate-100 rounded-xl flex items-center justify-center shrink-0">
-            <Package size={32} className="text-[#E11D74]" />
-          </div>
-          <div className="flex-1">
-            <h2 className="font-bold text-lg text-slate-800">{report.name}</h2>
-            <p className="text-sm text-slate-500 mb-2">SKU: {report.sku}</p>
-            <div className="flex gap-2">
-              <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-bold">{report.qty} Pcs</span>
-              {report.status === "Menunggu" && <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold">Menunggu SPV</span>}
-              {report.status === "Diproses" && <span className="bg-cyan-100 text-cyan-700 px-3 py-1 rounded-full text-xs font-bold">Diproses Marcom</span>}
-              {report.status === "Selesai" && <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">Selesai</span>}
-              {report.status === "Ditolak" && <span className="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-xs font-bold">Ditolak</span>}
+        <section className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+          <div className="flex items-start gap-4 mb-4">
+            <div className="w-16 h-16 bg-slate-100 rounded-xl flex items-center justify-center shrink-0">
+              {report.photos && report.photos.length > 0 ? (
+                <img src={report.photos[0]} alt="Produk" className="w-full h-full object-cover rounded-xl" />
+              ) : (
+                <Package size={32} className="text-[#E11D74]" />
+              )}
+            </div>
+            <div className="flex-1">
+              <h2 className="font-bold text-lg text-slate-800">{report.name}</h2>
+              <p className="text-sm text-slate-500 mb-2">SKU: {report.sku}</p>
+              <div className="flex gap-2">
+                <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-bold">{report.qty} Pcs</span>
+                {report.status === "Menunggu" && <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold">Menunggu SPV</span>}
+                {report.status === "Diproses" && <span className="bg-cyan-100 text-cyan-700 px-3 py-1 rounded-full text-xs font-bold">Diproses Marcom</span>}
+                {report.status === "Selesai" && <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">Selesai</span>}
+                {report.status === "Ditolak" && <span className="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-xs font-bold">Ditolak</span>}
+              </div>
             </div>
           </div>
+          
+          {(report.damageType || report.notes) && (
+            <div className="bg-rose-50/50 p-4 rounded-xl border border-rose-100 mt-4">
+              {report.damageType && <p className="text-sm font-bold text-rose-700 mb-1">Jenis: {report.damageType}</p>}
+              {report.notes && <p className="text-sm text-rose-600">{report.notes}</p>}
+            </div>
+          )}
+          
+          {report.photos && report.photos.length > 1 && (
+            <div className="mt-4 flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+              {report.photos.slice(1).map((src, i) => (
+                <img key={i} src={src} alt="Bukti" className="w-20 h-20 object-cover rounded-lg border border-gray-200 shrink-0" />
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Timeline Stepper */}

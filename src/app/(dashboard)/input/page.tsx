@@ -20,20 +20,45 @@ function InputForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [selectedResult, setSelectedResult] = useState<any>(null);
+  const [damageType, setDamageType] = useState("Kemasan Rusak");
+  const [notes, setNotes] = useState("");
 
   // Autofill effect
   useEffect(() => {
-    if (!sku || sku.length < 5) return;
+    if (!sku || sku.length < 4) {
+      setSearchResults([]);
+      return;
+    }
     
+    // Prevent refetching if we just selected from dropdown
+    if (selectedResult && (sku === selectedResult.sku || sku === selectedResult.barcode)) {
+      return;
+    }
+
     const fetchProduct = async () => {
       setIsSearching(true);
       try {
         const res = await fetch(`/api/products?q=${sku}`);
         if (res.ok) {
           const data = await res.json();
-          setName(data.name);
-          setCategory(data.category);
-          setUnit(data.unit);
+          if (data.length === 1) {
+            // Exact match
+            setName(data[0].name);
+            setCategory(data[0].category);
+            setUnit(data[0].unit);
+            setSearchResults([]);
+            setSelectedResult(data[0]);
+          } else if (data.length > 1) {
+            // Multiple matches
+            setSearchResults(data);
+            setSelectedResult(null);
+          } else {
+            // No matches
+            setSearchResults([]);
+            setSelectedResult(null);
+          }
         }
       } catch (err) {
         console.error(err);
@@ -42,9 +67,18 @@ function InputForm() {
       }
     };
     
-    const timeout = setTimeout(fetchProduct, 500); // debounce 500ms
+    const timeout = setTimeout(fetchProduct, 600); // debounce 600ms
     return () => clearTimeout(timeout);
-  }, [sku]);
+  }, [sku, selectedResult]);
+
+  const handleSelectResult = (product: any) => {
+    setSku(product.sku); // Change input to actual exact SKU
+    setName(product.name);
+    setCategory(product.category);
+    setUnit(product.unit);
+    setSearchResults([]);
+    setSelectedResult(product);
+  };
 
   const handleSubmit = () => {
     if (!sku || !name || qty < 1) {
@@ -55,7 +89,7 @@ function InputForm() {
     setIsSubmitting(true);
     // Simulate API delay
     setTimeout(() => {
-      addReport({ sku, name, qty: Number(qty) });
+      addReport({ sku, name, qty: Number(qty), damageType, notes, photos });
       setIsSubmitting(false);
       alert("Laporan berhasil dikirim!");
       router.push("/list");
@@ -106,15 +140,38 @@ function InputForm() {
           <h2 className="font-bold text-slate-700 mb-4 text-sm border-b pb-2">Informasi Produk</h2>
           
           <div className="flex flex-col gap-3">
-            <div>
+            <div className="relative">
               <label className="text-xs text-slate-500 font-semibold mb-1 block">SKU Produk *</label>
               <input 
                 type="text" 
                 value={sku} 
-                onChange={(e) => setSku(e.target.value)}
-                placeholder="Contoh: 899912345" 
+                onChange={(e) => {
+                  setSku(e.target.value);
+                  setSelectedResult(null); // Clear selected if user types again
+                }}
+                placeholder="Ketik minimal 4-6 digit terakhir..." 
                 className="w-full text-slate-900 bg-slate-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-[#E11D74] outline-none transition" 
               />
+              {isSearching && (
+                <span className="absolute right-3 top-8 text-xs text-slate-400">Mencari...</span>
+              )}
+              
+              {/* Dropdown Hasil Pencarian */}
+              {searchResults.length > 0 && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-gray-200 shadow-xl rounded-xl max-h-60 overflow-y-auto overflow-x-hidden">
+                  <div className="text-[10px] font-bold text-slate-400 px-3 py-2 bg-slate-50 border-b uppercase sticky top-0">Pilih Barang ({searchResults.length} ditemukan)</div>
+                  {searchResults.map((product, idx) => (
+                    <div 
+                      key={idx} 
+                      onClick={() => handleSelectResult(product)}
+                      className="px-3 py-3 border-b border-gray-100 hover:bg-pink-50 cursor-pointer transition active:bg-pink-100 flex flex-col"
+                    >
+                      <span className="font-bold text-sm text-slate-800">{product.name}</span>
+                      <span className="text-xs text-slate-500">SKU: {product.sku} {product.barcode ? `• Barcode: ${product.barcode}` : ""}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             
             <div>
@@ -175,8 +232,8 @@ function InputForm() {
               <label className="text-xs text-slate-500 font-semibold mb-1 block">Jenis Kerusakan</label>
               <div className="flex flex-wrap gap-2">
                 {['Kemasan Rusak', 'Expired', 'Bocor', 'Cacat Pabrik'].map((type) => (
-                  <label key={type} className="flex items-center gap-2 bg-slate-50 border border-gray-200 px-3 py-2 rounded-xl text-sm cursor-pointer hover:border-[#E11D74] transition">
-                    <input type="radio" name="damage" className="text-[#E11D74] focus:ring-[#E11D74]" />
+                  <label key={type} className={`flex items-center gap-2 bg-slate-50 border px-3 py-2 rounded-xl text-sm cursor-pointer transition ${damageType === type ? 'border-[#E11D74] text-[#E11D74] font-semibold' : 'border-gray-200 hover:border-[#E11D74]'}`}>
+                    <input type="radio" name="damage" value={type} checked={damageType === type} onChange={(e) => setDamageType(e.target.value)} className="text-[#E11D74] focus:ring-[#E11D74]" />
                     <span>{type}</span>
                   </label>
                 ))}
@@ -185,7 +242,7 @@ function InputForm() {
 
             <div>
               <label className="text-xs text-slate-500 font-semibold mb-1 block">Catatan (Maks 200 karakter)</label>
-              <textarea rows={3} maxLength={200} placeholder="Tambahkan penjelasan singkat..." className="w-full text-slate-900 bg-slate-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-[#E11D74] outline-none transition resize-none"></textarea>
+              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} maxLength={200} placeholder="Tambahkan penjelasan singkat..." className="w-full text-slate-900 bg-slate-50 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-[#E11D74] outline-none transition resize-none"></textarea>
             </div>
           </div>
         </section>
